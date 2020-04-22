@@ -126,10 +126,10 @@ def start():
     queue.setStart(Event(1,"start"))
     queue.setFinish(Event(1000,"finish"))
     
-    queue.add(Event(10,"diocarlo"))
-    queue.add(Event(50,"diocarlo"))
-    queue.add(Event(12,"diocarlo"))
-    queue.add(Event(9,"diocarlo"))
+    queue.add(Event(10,"test"))
+    queue.add(Event(50,"test"))
+    queue.add(Event(12,"test"))
+    queue.add(Event(9,"test"))
     # start_event = Event(time+1,"start queue")
     # time = time + 1
     # finish_event = Event(1000,"finish queue")
