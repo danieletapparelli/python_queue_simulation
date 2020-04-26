@@ -1,4 +1,7 @@
 import random
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.patches as mpatches
 
 
 class Event:
@@ -67,20 +70,20 @@ class Queue:
             
             return temp
 
-    def search(self,item):
-        current = self.head
-        found = False
-        stop = False
-        while current != None and not found and not stop:
-            if current.getTimeEvent() == item.time_occ:
-                found = True
-            else:
-                if current.getTimeEvent() > item.time_occ:
-                    stop = True
-                else:
-                    current = current.getNext()
+    # def search(self,item):
+    #     current = self.head
+    #     found = False
+    #     stop = False
+    #     while current != None and not found and not stop:
+    #         if current.getTimeEvent() == item.time_occ:
+    #             found = True
+    #         else:
+    #             if current.getTimeEvent() > item.time_occ:
+    #                 stop = True
+    #             else:
+    #                 current = current.getNext()
 
-        return found
+    #     return found
 
     def add(self,event):
         current = self.head
@@ -138,131 +141,181 @@ class Queue:
 
 def start(lam, u):
     time = 0
-    packet_arrival = 1
-    arrival_time = 0
+    packet_arrival = 0
+   
     packet_departure = 0
     queue = Queue()
-    queue.setStart(Event(1,1,"start"))
+    # queue.setStart(Event(1,1,"start"))
     queue.setFinish(Event(0,1000,"finish"))
     server = Server()
-    server_time = 0
-    time_dep = 0
     i = 1
     packet_to_schedule = None
     packet_in_server = 0
     number_of_packet_system = []
-    arrival_time = random.expovariate(lam)
-    departure_time = 0
-    service_time = 0
-
-    
+    waits = []
+    next_arrival_time = random.expovariate(lam)
+    next_service_time = 0
+    total_next_arrival_time = next_arrival_time
+    total_next_service_time = 0
     while time<queue.getFinish() :
         
-        print("this is the global time",time)
+        # print("this is the global time",time)
         
-        next_arrival_time = arrival_time + random.expovariate(lam)
         
-        if queue.isEmpty() or arrival_time < service_time:
-            time = time + arrival_time
-            # if queue.isNotEmpty():
-            #    server_time = server_time - arrival_time
+        if queue.isEmpty() or total_next_arrival_time <= total_next_service_time:
+            if queue.isEmpty() and total_next_arrival_time >= total_next_service_time:
+                packet_in_server = 0
+            time = time + next_arrival_time
             i=i+1
             e = Event(i,time,"Arrival")
             packet_arrival = packet_arrival+1
-            arrival_time = random.expovariate(lam)
+            next_arrival_time = random.expovariate(lam)
+            total_next_arrival_time = time + next_arrival_time
             queue.add(e)
-        
+            number_of_packet_system.append(queue.size()+packet_in_server)
        
        
         
                 
         else:
             server.setStatus(1)
-            print("-----------------------SERVER STATUS-------------------------\n")
-            print("Packet-Processing ")
-            service_time = random.expovariate(u)
-            time = time + service_time
+            # print("-----------------------SERVER STATUS-------------------------\n")
+            # print("Packet-Processing ")
             
-            
-            # arrival_time = arrival_time - service_time
-         
-            
+            time = time + next_service_time
+            next_service_time = random.expovariate(u)
+            total_next_service_time = time + next_service_time
             packet_to_schedule = queue.getFirtsPacket()
-            print("Service Time: ",service_time,"secs")
-            print("ID Packet Scheduled: ", packet_to_schedule.getID())
-            print("Departure Time: ",departure_time,"secs")
-                
-            print("-------------------------------------------------------------\n")
+            # print("Service Time: ",next_service_time,"secs")
+            # print("ID Packet Scheduled: ", packet_to_schedule.getID())
+           
+            wait = time  - packet_to_schedule.getTimeEvent()
+            waits.append(wait)
+            # print("-------------------------------------------------------------\n")
             packet_departure = packet_departure + 1
             packet_in_server = 1
         
-        print("-----------------------QUEUE STATUS--------------------------\n")
-        print("Global Time: ",time,"secs")
-        queue.queueprint()     
-        print("-------------------------------------------------------------\n")
+        # print("-----------------------QUEUE STATUS--------------------------\n")
+        # print("Global Time: ",time,"secs")
+        # queue.queueprint()     
+        # print("-------------------------------------------------------------\n")
            
-            
-            
-            
-
-        # if server.getStatus()==1:
-        #     if time<time_dep:
-        #         print("Server is Processing ID: ",packet_to_schedule.getID(),"\n")
-        #         packet_in_server = 1
-        #     else:
-        #         print("Packet ID: ", packet_to_schedule.getID()," has been processed at time:", time,"secs")
-        #         server.setStatus(0)
-        #         time = time_dep
-        #         packet_in_server = 0
-            
         
         
-        # if server.getStatus()==0:
-        #     if queue.isNotEmpty():
-        #         print("-----------------------SERVER STATUS-------------------------\n")
-        #         print("Packet-Processing ")
-        #         server_time = time + random.expovariate(u)
-        #         packet_to_schedule = queue.getFirtsPacket()
-        #         print("ID Packet Scheduled: ", packet_to_schedule.getID())
-        #         print("Departure Time: ",server_time,"secs")
-        #         time_dep = server_time
-                
-        #         print("-------------------------------------------------------------\n")
-        #         packet_departure = packet_departure + 1
-        #         packet_in_server = 1
-        #         server.setStatus(1)
-        
-        number_of_packet_system.append(queue.size()+packet_in_server)
         
     while queue.isNotEmpty():
         
         
-        print("-----------------------SERVER STATUS-------------------------\n")
-        print("Time: ",time)
-        print("Packet-Processing ")
+        # print("-----------------------SERVER STATUS-------------------------\n")
+        # print("Time: ",time)
+        # print("Packet-Processing ")
+        
         service_time = random.expovariate(u)
         time = time + service_time
+        
+        
+        # print("ID Packet Scheduled: ", packet_to_schedule.getID())
+        
         packet_to_schedule = queue.getFirtsPacket()
+        wait = time  - packet_to_schedule.getTimeEvent()
         
-        print("ID Packet Scheduled: ", packet_to_schedule.getID())
+        waits.append(wait)
         
-        print("-------------------------------------------------------------\n")
+        # print("-------------------------------------------------------------\n")
         packet_departure = packet_departure + 1
-        packet_in_server=1
+        packet_in_server = 1
         server.setStatus(1)
-                
+        
+        
         number_of_packet_system.append(queue.size()+packet_in_server)
-
+    
+    average_wait = sum(waits)/len(waits)
+    
+    print("Average WAIT:",average_wait)
     average_number_packets = sum(number_of_packet_system)/len(number_of_packet_system)
-    print(number_of_packet_system)
+   
+    
+ 
+    for i in range(len(number_of_packet_system)):
+        plt.plot(i,number_of_packet_system[i],marker="|", color="blue")
+        
+    plt.ylabel("Number of Packets")
+    plt.xlabel("Times (secs)")
+    plt.show()
     print(average_number_packets)
-    queue.queueprint()
+    
+ 
     print("Packets Arrivals", packet_arrival, "Packets Departures", packet_departure)
+    return average_number_packets, average_wait
 
+def calc_theoretical_n_of_packet(lam,u):
+    theor = (lam/u)/(1-(lam/u))
+    return theor
+
+def calc_theoretical_wait(lam,u):
+    theor = ((lam/u)**2)/(lam*(1-(lam/u)))
+    return theor
 
 def main():
-    start(0.7 ,5)
-  
+   
+
+
+    lambda_2 = start(1,5)
+    lambda_3 = start(2,5)
+    lambda_4 = start(3,5)
+    lambda_5 = start(4,5)
+    
+    steady_state1 = calc_theoretical_n_of_packet(1,5)
+    steady_state2 = calc_theoretical_n_of_packet(2,5)
+    steady_state3 = calc_theoretical_n_of_packet(3,5)
+    steady_state4 = calc_theoretical_n_of_packet(4,5)
+    
+    plt.figure(" Figure for lambda=" )
+    this_axis = plt.subplot()
+    
+    green_patch = mpatches.Patch(color='green', label='Simulation')
+    red_patch = mpatches.Patch(color='red', label='Theorethical')
+    plt.legend(handles=[green_patch,red_patch])
+    
+    this_axis.plot(1,lambda_2[0],'go', color="green")
+    this_axis.plot(1,steady_state1,'bs', color="red")
+    this_axis.plot(2,lambda_3[0],'go', color="green" )
+    this_axis.plot(2,steady_state2,'bs', color="red")
+    this_axis.plot(3,lambda_4[0],'go', color="green")
+    this_axis.plot(3,steady_state3,'bs', color="red")
+    this_axis.plot(4,lambda_5[0], 'go',color="green")
+    this_axis.plot(4,steady_state4,'bs', color="red")
+    this_axis.set_ylabel("Average Number of Packets")
+    this_axis.set_xlabel("Lambda Value")
+    plt.show()
+    
+    
+    average_wait1 = calc_theoretical_wait(1,5)
+    average_wait2 = calc_theoretical_wait(2,5)
+    average_wait3 = calc_theoretical_wait(3,5)
+    average_wait4 = calc_theoretical_wait(4,5)
+   
+    
+    plt.figure(" Figure for lambda=" )
+    blue_patch = mpatches.Patch(color='blue', label='Simulation')
+    red_patch = mpatches.Patch(color='red', label='Theorethical')
+    plt.legend(handles=[blue_patch,red_patch])
+    this_axis2 = plt.subplot()
+    
+    this_axis2.scatter(1,lambda_2[1], color="blue")
+    this_axis2.scatter(1,average_wait1, color="red")
+    this_axis2.scatter(2,lambda_3[1], color="blue" )
+    this_axis2.scatter(2,average_wait2, color="red")
+    this_axis2.scatter(3,lambda_4[1], color="blue")
+    this_axis2.scatter(3,average_wait3, color="red")
+    this_axis2.scatter(4,lambda_5[1], color="blue")    
+    this_axis2.scatter(4,average_wait4, color="red")
+    this_axis2.set_ylabel("Average Wait (secs)")
+    this_axis2.set_xlabel("Lambda Value")
+    plt.show()
+    
+    
+    
 
 if __name__ == "__main__":
     main()
